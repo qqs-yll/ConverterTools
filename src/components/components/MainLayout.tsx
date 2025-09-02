@@ -18,7 +18,8 @@ import {
   Menu as MenuIcon,
   Language as LanguageIcon
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface MainLayoutProps {
@@ -29,7 +30,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { language, setLanguage, t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const location = useLocation();
+  const pathname = usePathname();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = React.useState<null | HTMLElement>(null);
 
@@ -68,7 +69,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   ];
 
   const isActivePath = (path: string) => {
-    return location.pathname === path;
+    return pathname === path;
   };
 
   return (
@@ -112,36 +113,35 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {!isMobile ? (
             <Stack direction="row" spacing={1} sx={{ mr: 2 }}>
               {navigationItems.map((item) => (
-                <Button
-                  key={item.key}
-                  component={Link}
-                  to={item.path}
-                  variant={isActivePath(item.path) ? "contained" : "text"}
-                  sx={{
-                    color: isActivePath(item.path) ? 'primary.contrastText' : 'white',
-                    backgroundColor: isActivePath(item.path) ? 'rgba(255,255,255,0.2)' : 'transparent',
-                    borderRadius: '20px',
-                    px: 2,
-                    py: 0.5,
-                    fontSize: '0.85rem',
-                    fontWeight: 500,
-                    textTransform: 'none',
-                    minWidth: 'auto',
-                    transition: 'all 0.3s ease',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.15)',
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                    },
-                    '&:active': {
-                      transform: 'translateY(0px)',
-                    }
-                  }}
-                >
-                  {item.label}
-                </Button>
+                <Link key={item.key} href={item.path} style={{ textDecoration: 'none' }}>
+                  <Button
+                    variant={isActivePath(item.path) ? "contained" : "text"}
+                    sx={{
+                      color: isActivePath(item.path) ? 'primary.contrastText' : 'white',
+                      backgroundColor: isActivePath(item.path) ? 'rgba(255,255,255,0.2)' : 'transparent',
+                      borderRadius: '20px',
+                      px: 2,
+                      py: 0.5,
+                      fontSize: '0.85rem',
+                      fontWeight: 500,
+                      textTransform: 'none',
+                      minWidth: 'auto',
+                      transition: 'all 0.3s ease',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.15)',
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0px)',
+                      }
+                    }}
+                  >
+                    {item.label}
+                  </Button>
+                </Link>
               ))}
             </Stack>
           ) : (
@@ -205,19 +205,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             }}
           >
             {navigationItems.map((item) => (
-              <MenuItem
-                key={item.key}
-                component={Link}
-                to={item.path}
-                onClick={handleMobileMenuClose}
-                selected={isActivePath(item.path)}
-                sx={{
-                  py: 1.5,
-                  fontSize: '0.9rem',
-                }}
-              >
-                {item.label}
-              </MenuItem>
+              <Link key={item.key} href={item.path} style={{ textDecoration: 'none' }}>
+                <MenuItem
+                  onClick={handleMobileMenuClose}
+                  selected={isActivePath(item.path)}
+                  sx={{
+                    py: 1.5,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {item.label}
+                </MenuItem>
+              </Link>
             ))}
           </Menu>
         </Toolbar>
