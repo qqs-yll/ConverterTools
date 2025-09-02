@@ -1,0 +1,21 @@
+{
+  "converters": {
+    "pngToJpg": {
+      "title": "PNG to JPG Converter",
+      "description": "Convert PNG images to JPG format easily and quickly",
+      "dropzone": {
+        "title": "Drop PNG file here or click to select",
+        "subtitle": "Supports PNG files"
+      },
+      "button": "Convert to JPG",
+      "success": "Conversion successful! Your file has been downloaded.",
+      "errors": {
+        "selectFile": "Please select a file first",
+        "invalidType": "Please select a PNG file",
+        "conversionFailed": "Server error occurred during conversion",
+        "emptyFile": "Converted file is empty",
+        "unexpected": "An unexpected error occurred. Please check your file and try again."
+      }
+    }
+  }
+} 

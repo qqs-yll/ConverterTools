@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>ConverterTools API 连接测试</h1>
+    
+    <div class="info">
+        <strong>环境信息：</strong><br>
+        用户代理：<span id="userAgent"></span><br>
+        屏幕尺寸：<span id="screenSize"></span><br>
+        网络连接：<span id="networkStatus"></span><br>
+        当前时间：<span id="currentTime"></span>
+    </div>
+
+    <h2>测试项目</h2>
+    <button onclick="testCurrency()">测试货币转换</button>
+    <button onclick="testVolume()">测试体积转换</button>
+    <button onclick="testWeight()">测试重量转换</button>
+    <button onclick="testLength()">测试长度转换</button>
+    <button onclick="testTemperature()">测试温度转换</button>
+    <button onclick="testTimezone()">测试时区转换</button>
+    <button onclick="testAll()">测试所有</button>
+    <button onclick="clearResults()">清除结果</button>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'https://converter-backend.qaz354073.workers.dev';
+        
+        // 显示环境信息
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('screenSize').textContent = `${window.screen.width}x${window.screen.height}`;
+        document.getElementById('networkStatus').textContent = navigator.onLine ? '在线' : '离线';
+        document.getElementById('currentTime').textContent = new Date().toLocaleString();
+
+        function addResult(title, result, isError = false) {
+            const div = document.createElement('div');
+            div.className = `test-result ${isError ? 'error' : 'success'}`;
+            div.innerHTML = `<strong>${title}</strong>\n${result}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        function addInfo(title, info) {
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `<strong>${title}</strong>\n${info}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testAPI(endpoint, data, testName) {
+            try {
+                addInfo(`${testName} - 开始测试`, `URL: ${API_BASE}${endpoint}\n请求数据: ${JSON.stringify(data)}`);
+                
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+                const endTime = Date.now();
+                
+                const responseText = await response.text();
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error(`响应不是有效的 JSON: ${responseText}`);
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseData.error || responseText}`);
+                }
+
+                addResult(`${testName} - 成功`, 
+                    `耗时: ${endTime - startTime}ms\n` +
+                    `状态: ${response.status}\n` +
+                    `响应: ${JSON.stringify(responseData, null, 2)}`
+                );
+                return responseData;
+            } catch (error) {
+                addResult(`${testName} - 失败`, 
+                    `错误: ${error.message}\n` +
+                    `堆栈: ${error.stack || '无堆栈信息'}`
+                , true);
+                throw error;
+            }
+        }
+
+        async function testCurrency() {
+            await testAPI('/api/convert/currency', {
+                amount: '100',
+                from: 'USD',
+                to: 'EUR'
+            }, '货币转换');
+        }
+
+        async function testVolume() {
+            await testAPI('/api/convert/volume', {
+                amount: '1',
+                from: 'l',
+                to: 'ml'
+            }, '体积转换');
+        }
+
+        async function testWeight() {
+            await testAPI('/api/convert/weight', {
+                amount: '1',
+                from: 'kg',
+                to: 'g'
+            }, '重量转换');
+        }
+
+        async function testLength() {
+            await testAPI('/api/convert/length', {
+                amount: '1',
+                from: 'm',
+                to: 'cm'
+            }, '长度转换');
+        }
+
+        async function testTemperature() {
+            await testAPI('/api/convert/temperature', {
+                amount: '0',
+                from: 'c',
+                to: 'f'
+            }, '温度转换');
+        }
+
+        async function testTimezone() {
+            await testAPI('/api/convert/timezone', {
+                datetime: '2024-01-01 12:00',
+                from: 'UTC',
+                to: 'Asia/Shanghai'
+            }, '时区转换');
+        }
+
+        async function testAll() {
+            clearResults();
+            addInfo('批量测试', '开始测试所有API...');
+            
+            const tests = [
+                { name: '货币转换', func: testCurrency },
+                { name: '体积转换', func: testVolume },
+                { name: '重量转换', func: testWeight },
+                { name: '长度转换', func: testLength },
+                { name: '温度转换', func: testTemperature },
+                { name: '时区转换', func: testTimezone }
+            ];
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const test of tests) {
+                try {
+                    await test.func();
+                    successCount++;
+                } catch (error) {
+                    failCount++;
+                }
+                // 短暂延迟避免请求过于频繁
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            addInfo('测试完成', `成功: ${successCount}, 失败: ${failCount}`);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 网络状态监听
+        window.addEventListener('online', () => {
+            document.getElementById('networkStatus').textContent = '在线';
+            addInfo('网络状态', '网络连接已恢复');
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('networkStatus').textContent = '离线';
+            addInfo('网络状态', '网络连接已断开');
+        });
+    </script>
+</body>
+</html> 

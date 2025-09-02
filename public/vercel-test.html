@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vercel API 测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-item { margin: 15px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 3px; }
+        .success { border-color: green; background: #e8f5e8; }
+        .error { border-color: red; background: #ffe8e8; }
+        button { padding: 8px 16px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #005a8a; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Vercel API 测试</h1>
+    <p>测试新部署的 Vercel API 是否正常工作</p>
+    
+    <div class="test-item">
+        <h3>1. 货币转换测试</h3>
+        <button onclick="testCurrency()">测试货币转换 (1 USD → CNY)</button>
+        <div id="currency-result" class="result"></div>
+    </div>
+    
+    <div class="test-item">
+        <h3>2. 重量转换测试</h3>
+        <button onclick="testWeight()">测试重量转换 (1 kg → g)</button>
+        <div id="weight-result" class="result"></div>
+    </div>
+    
+    <div class="test-item">
+        <h3>3. 体积转换测试</h3>
+        <button onclick="testVolume()">测试体积转换 (1 l → ml)</button>
+        <div id="volume-result" class="result"></div>
+    </div>
+    
+    <div class="test-item">
+        <h3>4. 长度转换测试</h3>
+        <button onclick="testLength()">测试长度转换 (1 m → cm)</button>
+        <div id="length-result" class="result"></div>
+    </div>
+    
+    <div class="test-item">
+        <h3>5. 温度转换测试</h3>
+        <button onclick="testTemperature()">测试温度转换 (0°C → °F)</button>
+        <div id="temperature-result" class="result"></div>
+    </div>
+    
+    <div class="test-item">
+        <h3>6. 时区转换测试</h3>
+        <button onclick="testTimezone()">测试时区转换 (Beijing → New York)</button>
+        <div id="timezone-result" class="result"></div>
+    </div>
+    
+    <div class="test-item">
+        <h3>🔄 全部测试</h3>
+        <button onclick="testAll()" style="background: #dc3545;">运行所有测试</button>
+        <div id="all-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://converter-tools-backend.vercel.app';
+        
+        async function apiCall(endpoint, data) {
+            try {
+                console.log(`调用 API: ${API_BASE}${endpoint}`, data);
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                console.log(`响应状态: ${response.status}`);
+                const result = await response.json();
+                console.log('响应数据:', result);
+                return result;
+            } catch (error) {
+                console.error('API调用失败:', error);
+                throw error;
+            }
+        }
+        
+        function showResult(elementId, success, message, data = null) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${success ? 'success' : 'error'}`;
+            element.innerHTML = `
+                <strong>${success ? '✅ 成功' : '❌ 失败'}</strong><br>
+                ${message}
+                ${data ? `<br><pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+            `;
+        }
+        
+        async function testCurrency() {
+            try {
+                const result = await apiCall('/api/convert/currency', {
+                    amount: 1,
+                    from: 'USD',
+                    to: 'CNY'
+                });
+                showResult('currency-result', true, `1 USD = ${result.result} CNY`, result);
+            } catch (error) {
+                showResult('currency-result', false, `错误: ${error.message}`);
+            }
+        }
+        
+        async function testWeight() {
+            try {
+                const result = await apiCall('/api/convert/weight', {
+                    amount: 1,
+                    from: 'kg',
+                    to: 'g'
+                });
+                showResult('weight-result', true, `1 kg = ${result.result} g`, result);
+            } catch (error) {
+                showResult('weight-result', false, `错误: ${error.message}`);
+            }
+        }
+        
+        async function testVolume() {
+            try {
+                const result = await apiCall('/api/convert/volume', {
+                    amount: 1,
+                    from: 'l',
+                    to: 'ml'
+                });
+                showResult('volume-result', true, `1 l = ${result.result} ml`, result);
+            } catch (error) {
+                showResult('volume-result', false, `错误: ${error.message}`);
+            }
+        }
+        
+        async function testLength() {
+            try {
+                const result = await apiCall('/api/convert/length', {
+                    amount: 1,
+                    from: 'm',
+                    to: 'cm'
+                });
+                showResult('length-result', true, `1 m = ${result.result} cm`, result);
+            } catch (error) {
+                showResult('length-result', false, `错误: ${error.message}`);
+            }
+        }
+        
+        async function testTemperature() {
+            try {
+                const result = await apiCall('/api/convert/temperature', {
+                    amount: 0,
+                    from: 'c',
+                    to: 'f'
+                });
+                showResult('temperature-result', true, `0°C = ${result.result}°F`, result);
+            } catch (error) {
+                showResult('temperature-result', false, `错误: ${error.message}`);
+            }
+        }
+        
+        async function testTimezone() {
+            try {
+                const result = await apiCall('/api/convert/timezone', {
+                    datetime: '2024-01-01 12:00:00',
+                    fromTz: 'Asia/Shanghai',
+                    toTz: 'America/New_York'
+                });
+                showResult('timezone-result', true, `北京时间转换成功`, result);
+            } catch (error) {
+                showResult('timezone-result', false, `错误: ${error.message}`);
+            }
+        }
+        
+        async function testAll() {
+            document.getElementById('all-result').innerHTML = '🔄 正在运行所有测试...';
+            
+            const tests = [
+                testCurrency,
+                testWeight, 
+                testVolume,
+                testLength,
+                testTemperature,
+                testTimezone
+            ];
+            
+            let successCount = 0;
+            for (const test of tests) {
+                try {
+                    await test();
+                    successCount++;
+                } catch (error) {
+                    console.error('测试失败:', error);
+                }
+                await new Promise(resolve => setTimeout(resolve, 500)); // 等待0.5秒
+            }
+            
+            showResult('all-result', successCount === tests.length, 
+                      `完成！${successCount}/${tests.length} 个测试通过`);
+        }
+    </script>
+</body>
+</html> 

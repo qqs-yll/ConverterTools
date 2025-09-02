@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .test-item {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .button {
+            width: 100%;
+            padding: 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .button:hover {
+            background: #1976D2;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 基础测试页面</h1>
+        
+        <div class="test-item">
+            <strong>✅ HTML加载成功</strong><br>
+            如果您能看到这个页面，说明静态文件加载正常
+        </div>
+        
+        <div class="test-item" id="jsTest">
+            <strong>⏳ JavaScript测试</strong><br>
+            正在检测JavaScript是否正常工作...
+        </div>
+        
+        <div class="test-item" id="fetchTest">
+            <strong>⏳ 网络测试</strong><br>
+            正在测试网络连接...
+        </div>
+        
+        <button class="button" onclick="testMainSite()">🏠 测试主站加载</button>
+        <button class="button" onclick="testAPI()">🔗 测试API连接</button>
+        <button class="button" onclick="showDebugInfo()">📱 显示调试信息</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 测试JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const jsTest = document.getElementById('jsTest');
+            try {
+                jsTest.innerHTML = '<strong>✅ JavaScript正常</strong><br>JavaScript引擎工作正常';
+                jsTest.className = 'test-item';
+                
+                // 测试现代JavaScript特性
+                const testArrow = () => 'Arrow functions work';
+                const testTemplate = `Template literals work`;
+                const testPromise = new Promise(resolve => resolve('Promises work'));
+                
+                testNetworkConnection();
+            } catch (error) {
+                jsTest.innerHTML = `<strong>❌ JavaScript错误</strong><br>${error.message}`;
+                jsTest.className = 'test-item error';
+            }
+        });
+        
+        // 测试网络连接
+        async function testNetworkConnection() {
+            const fetchTest = document.getElementById('fetchTest');
+            try {
+                // 测试fetch API
+                const response = await fetch('https://httpbin.org/get', {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    fetchTest.innerHTML = '<strong>✅ 网络连接正常</strong><br>Fetch API工作正常，可以访问外部服务';
+                    fetchTest.className = 'test-item';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                fetchTest.innerHTML = `<strong>❌ 网络连接失败</strong><br>错误: ${error.message}`;
+                fetchTest.className = 'test-item error';
+            }
+        }
+        
+        // 测试主站
+        async function testMainSite() {
+            const result = document.getElementById('result');
+            result.innerHTML = '正在测试主站加载...\n';
+            
+            try {
+                // 尝试加载主站的index.html
+                const response = await fetch('/', {
+                    method: 'GET',
+                    cache: 'no-cache'
+                });
+                
+                const text = await response.text();
+                
+                if (response.ok) {
+                    result.innerHTML += `✅ 主站响应正常\n状态: ${response.status}\n内容长度: ${text.length} 字符\n`;
+                    
+                    // 检查是否包含React相关内容
+                    if (text.includes('react') || text.includes('React') || text.includes('root')) {
+                        result.innerHTML += '✅ 发现React相关内容\n';
+                    } else {
+                        result.innerHTML += '⚠️ 未发现React相关内容\n';
+                    }
+                    
+                    // 检查JS文件引用
+                    const jsMatches = text.match(/src="[^"]*\.js"/g);
+                    if (jsMatches) {
+                        result.innerHTML += `📄 发现 ${jsMatches.length} 个JS文件引用\n`;
+                        jsMatches.forEach((match, index) => {
+                            result.innerHTML += `  ${index + 1}. ${match}\n`;
+                        });
+                    } else {
+                        result.innerHTML += '❌ 未发现JS文件引用\n';
+                    }
+                } else {
+                    result.innerHTML += `❌ 主站加载失败\n状态: ${response.status}\n`;
+                }
+            } catch (error) {
+                result.innerHTML += `❌ 主站连接失败\n错误: ${error.message}\n`;
+            }
+        }
+        
+        // 测试API
+        async function testAPI() {
+            const result = document.getElementById('result');
+            result.innerHTML = '正在测试API连接...\n';
+            
+            const apiUrl = 'https://converter-backend.qaz354073.workers.dev';
+            
+            try {
+                // 测试基础连接
+                const response = await fetch(`${apiUrl}/api/convert/weight`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: 1,
+                        from: 'kg',
+                        to: 'g'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML += `✅ API连接成功\n结果: ${data.result}\n`;
+                } else {
+                    result.innerHTML += `❌ API返回错误\n状态: ${response.status}\n错误: ${data.error}\n`;
+                }
+            } catch (error) {
+                result.innerHTML += `❌ API连接失败\n错误: ${error.message}\n`;
+            }
+        }
+        
+        // 显示调试信息
+        function showDebugInfo() {
+            const result = document.getElementById('result');
+            const info = {
+                '用户代理': navigator.userAgent,
+                '平台': navigator.platform,
+                '语言': navigator.language,
+                '在线状态': navigator.onLine ? '在线' : '离线',
+                'Cookie启用': navigator.cookieEnabled ? '是' : '否',
+                '屏幕尺寸': `${screen.width}x${screen.height}`,
+                '视口尺寸': `${window.innerWidth}x${window.innerHeight}`,
+                '设备像素比': window.devicePixelRatio,
+                '触摸支持': 'ontouchstart' in window ? '是' : '否',
+                '协议': location.protocol,
+                '主机': location.host,
+                '路径': location.pathname,
+                '当前时间': new Date().toLocaleString()
+            };
+            
+            // 检测网络类型
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (connection) {
+                info['网络类型'] = connection.effectiveType || '未知';
+                info['下行速度'] = connection.downlink ? `${connection.downlink} Mbps` : '未知';
+                info['RTT'] = connection.rtt ? `${connection.rtt} ms` : '未知';
+            }
+            
+            result.innerHTML = Object.entries(info)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+        }
+    </script>
+</body>
+</html> 

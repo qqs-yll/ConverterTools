@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 离线模式测试</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f0f0f0; 
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .converter {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background: #005a8a; }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 6px;
+            border: 1px solid #4CAF50;
+        }
+        .error {
+            background: #ffe8e8;
+            border-color: #f44336;
+        }
+        h1, h2 { text-align: center; margin-bottom: 20px; }
+        .status { 
+            text-align: center; 
+            padding: 10px; 
+            background: #fff3cd; 
+            border-radius: 6px; 
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 离线转换器测试</h1>
+        <div class="status">
+            <strong>📱 100% 离线模式</strong><br>
+            无需网络连接，所有计算在本地完成
+        </div>
+
+        <!-- 货币转换 -->
+        <div class="converter">
+            <h2>💰 货币转换</h2>
+            <input type="number" id="currencyAmount" value="100" placeholder="金额">
+            <select id="currencyFrom">
+                <option value="USD">美元 (USD)</option>
+                <option value="CNY">人民币 (CNY)</option>
+                <option value="EUR">欧元 (EUR)</option>
+                <option value="GBP">英镑 (GBP)</option>
+                <option value="JPY">日元 (JPY)</option>
+            </select>
+            <select id="currencyTo">
+                <option value="CNY">人民币 (CNY)</option>
+                <option value="USD">美元 (USD)</option>
+                <option value="EUR">欧元 (EUR)</option>
+                <option value="GBP">英镑 (GBP)</option>
+                <option value="JPY">日元 (JPY)</option>
+            </select>
+            <button onclick="testCurrency()">💱 转换货币</button>
+            <div id="currencyResult"></div>
+        </div>
+
+        <!-- 重量转换 -->
+        <div class="converter">
+            <h2>⚖️ 重量转换</h2>
+            <input type="number" id="weightAmount" value="1" placeholder="重量">
+            <select id="weightFrom">
+                <option value="kg">千克 (kg)</option>
+                <option value="g">克 (g)</option>
+                <option value="lb">磅 (lb)</option>
+                <option value="oz">盎司 (oz)</option>
+            </select>
+            <select id="weightTo">
+                <option value="g">克 (g)</option>
+                <option value="kg">千克 (kg)</option>
+                <option value="lb">磅 (lb)</option>
+                <option value="oz">盎司 (oz)</option>
+            </select>
+            <button onclick="testWeight()">⚖️ 转换重量</button>
+            <div id="weightResult"></div>
+        </div>
+
+        <!-- 体积转换 -->
+        <div class="converter">
+            <h2>🧊 体积转换</h2>
+            <input type="number" id="volumeAmount" value="1" placeholder="体积">
+            <select id="volumeFrom">
+                <option value="l">升 (l)</option>
+                <option value="ml">毫升 (ml)</option>
+                <option value="gal">加仑 (gal)</option>
+                <option value="cup">杯 (cup)</option>
+            </select>
+            <select id="volumeTo">
+                <option value="ml">毫升 (ml)</option>
+                <option value="l">升 (l)</option>
+                <option value="gal">加仑 (gal)</option>
+                <option value="cup">杯 (cup)</option>
+            </select>
+            <button onclick="testVolume()">🧊 转换体积</button>
+            <div id="volumeResult"></div>
+        </div>
+
+        <!-- 长度转换 -->
+        <div class="converter">
+            <h2>📏 长度转换</h2>
+            <input type="number" id="lengthAmount" value="1" placeholder="长度">
+            <select id="lengthFrom">
+                <option value="m">米 (m)</option>
+                <option value="cm">厘米 (cm)</option>
+                <option value="ft">英尺 (ft)</option>
+                <option value="in">英寸 (in)</option>
+            </select>
+            <select id="lengthTo">
+                <option value="cm">厘米 (cm)</option>
+                <option value="m">米 (m)</option>
+                <option value="ft">英尺 (ft)</option>
+                <option value="in">英寸 (in)</option>
+            </select>
+            <button onclick="testLength()">📏 转换长度</button>
+            <div id="lengthResult"></div>
+        </div>
+
+        <!-- 温度转换 -->
+        <div class="converter">
+            <h2>🌡️ 温度转换</h2>
+            <input type="number" id="tempAmount" value="0" placeholder="温度">
+            <select id="tempFrom">
+                <option value="c">摄氏度 (°C)</option>
+                <option value="f">华氏度 (°F)</option>
+                <option value="k">开尔文 (K)</option>
+            </select>
+            <select id="tempTo">
+                <option value="f">华氏度 (°F)</option>
+                <option value="c">摄氏度 (°C)</option>
+                <option value="k">开尔文 (K)</option>
+            </select>
+            <button onclick="testTemperature()">🌡️ 转换温度</button>
+            <div id="tempResult"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button onclick="testAll()" style="background: #28a745; font-size: 18px; padding: 15px;">
+                🚀 测试所有转换器
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 离线转换器代码（复制自 offlineConverter.ts）
+        
+        // 重量转换率（以千克为基准）
+        const weightRates = {
+            'mg': 1000000, 'g': 1000, 'kg': 1, 't': 0.001,
+            'oz': 35.274, 'lb': 2.20462, 'st': 0.157473, 'cwt': 0.0196841,
+            'gr': 15432.4, 'ct': 5000
+        };
+
+        // 长度转换率（以米为基准）
+        const lengthRates = {
+            'mm': 1000, 'cm': 100, 'm': 1, 'km': 0.001,
+            'in': 39.3701, 'ft': 3.28084, 'yd': 1.09361, 'mi': 0.000621371,
+            'nm': 0.000539957, 'ly': 1.057e-16
+        };
+
+        // 体积转换率（以升为基准）
+        const volumeRates = {
+            'ml': 1000, 'l': 1, 'gal': 0.264172, 'm3': 0.001,
+            'ft3': 0.0353147, 'cm3': 1000, 'mm3': 1000000, 'in3': 61.0237,
+            'yd3': 0.00130795, 'qt': 1.05669, 'pt': 2.11338, 'cup': 4.22675,
+            'oz': 33.814, 'tbsp': 67.628, 'tsp': 202.884
+        };
+
+        // 固定汇率
+        const fixedRates = {
+            'USD': 1, 'EUR': 0.85, 'GBP': 0.73, 'JPY': 110, 'CNY': 6.45,
+            'AUD': 1.35, 'CAD': 1.25, 'CHF': 0.92, 'HKD': 7.8, 'SGD': 1.35
+        };
+
+        function convertUnits(amount, from, to, rates) {
+            if (!rates[from] || !rates[to]) {
+                return { success: false, error: `不支持的单位: ${from} 或 ${to}` };
+            }
+            const baseAmount = amount / rates[from];
+            const result = baseAmount * rates[to];
+            const rate = rates[to] / rates[from];
+            return {
+                success: true,
+                result: result.toFixed(6),
+                rate: parseFloat(rate.toFixed(6))
+            };
+        }
+
+        function convertTemperature(amount, from, to) {
+            let celsius;
+            switch (from.toLowerCase()) {
+                case 'c': celsius = amount; break;
+                case 'f': celsius = (amount - 32) * 5/9; break;
+                case 'k': celsius = amount - 273.15; break;
+                default: return { success: false, error: `不支持的温度单位: ${from}` };
+            }
+            
+            let result;
+            switch (to.toLowerCase()) {
+                case 'c': result = celsius; break;
+                case 'f': result = celsius * 9/5 + 32; break;
+                case 'k': result = celsius + 273.15; break;
+                default: return { success: false, error: `不支持的温度单位: ${to}` };
+            }
+            
+            return { success: true, result: result.toFixed(2) };
+        }
+
+        function showResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            if (result.success) {
+                element.innerHTML = `<strong>✅ 转换成功</strong><br>结果: ${result.result}${result.rate ? `<br>转换率: ${result.rate}` : ''}`;
+                element.className = 'result';
+            } else {
+                element.innerHTML = `<strong>❌ 转换失败</strong><br>错误: ${result.error}`;
+                element.className = 'result error';
+            }
+        }
+
+        function testCurrency() {
+            const amount = parseFloat(document.getElementById('currencyAmount').value);
+            const from = document.getElementById('currencyFrom').value;
+            const to = document.getElementById('currencyTo').value;
+            const result = convertUnits(amount, from, to, fixedRates);
+            showResult('currencyResult', result);
+        }
+
+        function testWeight() {
+            const amount = parseFloat(document.getElementById('weightAmount').value);
+            const from = document.getElementById('weightFrom').value;
+            const to = document.getElementById('weightTo').value;
+            const result = convertUnits(amount, from, to, weightRates);
+            showResult('weightResult', result);
+        }
+
+        function testVolume() {
+            const amount = parseFloat(document.getElementById('volumeAmount').value);
+            const from = document.getElementById('volumeFrom').value;
+            const to = document.getElementById('volumeTo').value;
+            const result = convertUnits(amount, from, to, volumeRates);
+            showResult('volumeResult', result);
+        }
+
+        function testLength() {
+            const amount = parseFloat(document.getElementById('lengthAmount').value);
+            const from = document.getElementById('lengthFrom').value;
+            const to = document.getElementById('lengthTo').value;
+            const result = convertUnits(amount, from, to, lengthRates);
+            showResult('lengthResult', result);
+        }
+
+        function testTemperature() {
+            const amount = parseFloat(document.getElementById('tempAmount').value);
+            const from = document.getElementById('tempFrom').value;
+            const to = document.getElementById('tempTo').value;
+            const result = convertTemperature(amount, from, to);
+            showResult('tempResult', result);
+        }
+
+        async function testAll() {
+            testCurrency();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            testWeight();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            testVolume();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            testLength();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            testTemperature();
+            
+            alert('🎉 所有转换器测试完成！这就是离线模式的效果 - 无需网络，瞬间响应！');
+        }
+    </script>
+</body>
+</html> 

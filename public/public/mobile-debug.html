@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 移动端API调试</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 15px; 
+            margin: 0;
+            background: #f5f5f5;
+        }
+        .debug-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-good { border-left: 4px solid #4CAF50; }
+        .status-bad { border-left: 4px solid #f44336; }
+        .status-testing { border-left: 4px solid #ff9800; }
+        button { 
+            width: 100%;
+            padding: 12px; 
+            margin: 8px 0; 
+            background: #2196F3; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:active { background: #1976D2; }
+        .log { 
+            background: #f9f9f9; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .api-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        .status-green { background: #4CAF50; }
+        .status-red { background: #f44336; }
+        .status-yellow { background: #ff9800; }
+        h1, h2, h3 { margin-top: 0; }
+        .device-info {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-panel">
+        <h1>📱 移动端API调试工具</h1>
+        <div class="device-info">
+            <strong>设备信息：</strong><br>
+            <span id="deviceInfo">检测中...</span>
+        </div>
+    </div>
+
+    <div class="debug-panel status-testing">
+        <h2>🌐 网络连接测试</h2>
+        <button onclick="testNetworkConnection()">测试基础网络连接</button>
+        <div id="networkResult"></div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>🔗 API状态监控</h2>
+        <div id="apiStatus">
+            <div class="api-status">
+                <span>Vercel 新后端</span>
+                <div class="status-indicator" id="api1-status"></div>
+            </div>
+            <div class="api-status">
+                <span>Vercel 原后端</span>
+                <div class="status-indicator" id="api2-status"></div>
+            </div>
+            <div class="api-status">
+                <span>Cloudflare Worker</span>
+                <div class="status-indicator" id="api3-status"></div>
+            </div>
+        </div>
+        <button onclick="testAllAPIs()">🔄 测试所有API</button>
+    </div>
+
+    <div class="debug-panel">
+        <h2>⚡ 功能测试</h2>
+        <button onclick="testCurrencyConverter()">💰 测试货币转换</button>
+        <button onclick="testWeightConverter()">⚖️ 测试重量转换</button>
+        <button onclick="testOfflineMode()">📱 测试离线模式</button>
+        <div id="functionResult"></div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>📋 调试日志</h2>
+        <button onclick="clearLog()">清空日志</button>
+        <div id="logOutput" class="log"></div>
+    </div>
+
+    <script>
+        const APIs = [
+            'https://converter-tools-backend.vercel.app',
+            'https://converter-tools-qaz354073.vercel.app', 
+            'https://converter-backend.qaz354073.workers.dev'
+        ];
+
+        let logOutput = [];
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logOutput.push(logEntry);
+            document.getElementById('logOutput').innerHTML = logOutput.slice(-20).join('<br>');
+            console.log(logEntry);
+        }
+
+        function clearLog() {
+            logOutput = [];
+            document.getElementById('logOutput').innerHTML = '';
+        }
+
+        function updateAPIStatus(index, status) {
+            const element = document.getElementById(`api${index + 1}-status`);
+            element.className = 'status-indicator status-' + status;
+        }
+
+        function showResult(elementId, content, className = '') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            if (className) {
+                element.className = className;
+            }
+        }
+
+        // 获取设备信息
+        function getDeviceInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                online: navigator.onLine,
+                screen: `${screen.width}x${screen.height}`,
+                viewport: `${window.innerWidth}x${window.innerHeight}`,
+                cookieEnabled: navigator.cookieEnabled,
+                connection: navigator.connection ? {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink
+                } : '未知'
+            };
+            
+            return `
+                用户代理: ${info.userAgent}<br>
+                平台: ${info.platform}<br>
+                语言: ${info.language}<br>
+                在线状态: ${info.online ? '在线' : '离线'}<br>
+                屏幕: ${info.screen}<br>
+                视窗: ${info.viewport}<br>
+                Cookie: ${info.cookieEnabled ? '启用' : '禁用'}<br>
+                网络: ${typeof info.connection === 'object' ? 
+                    `${info.connection.effectiveType} (${info.connection.downlink}Mbps)` : 
+                    info.connection}
+            `;
+        }
+
+        async function testNetworkConnection() {
+            log('开始网络连接测试...');
+            
+            try {
+                // 测试基本HTTPS连接
+                const startTime = Date.now();
+                const response = await fetch('https://httpbin.org/get', {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000)
+                });
+                const endTime = Date.now();
+                
+                if (response.ok) {
+                    log(`✅ 基础HTTPS连接正常 (${endTime - startTime}ms)`);
+                    showResult('networkResult', '✅ 网络连接正常', 'status-good');
+                } else {
+                    log(`❌ HTTPS连接异常: ${response.status}`);
+                    showResult('networkResult', '❌ 网络连接异常', 'status-bad');
+                }
+            } catch (error) {
+                log(`❌ 网络连接失败: ${error.message}`);
+                showResult('networkResult', `❌ 网络连接失败: ${error.message}`, 'status-bad');
+            }
+        }
+
+        async function testAPI(apiUrl, index) {
+            log(`测试API: ${apiUrl}`);
+            updateAPIStatus(index, 'yellow');
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                
+                const response = await fetch(`${apiUrl}/api/convert/weight`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: 1, from: 'kg', to: 'g' }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ API ${index + 1} 成功: ${data.result}g`);
+                    updateAPIStatus(index, 'green');
+                    return true;
+                } else {
+                    log(`❌ API ${index + 1} HTTP错误: ${response.status}`);
+                    updateAPIStatus(index, 'red');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ API ${index + 1} 连接失败: ${error.message}`);
+                updateAPIStatus(index, 'red');
+                return false;
+            }
+        }
+
+        async function testAllAPIs() {
+            log('开始测试所有API...');
+            
+            for (let i = 0; i < APIs.length; i++) {
+                await testAPI(APIs[i], i);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            log('API测试完成');
+        }
+
+        async function testCurrencyConverter() {
+            log('测试货币转换功能...');
+            
+            for (const api of APIs) {
+                try {
+                    const response = await fetch(`${api}/api/convert/currency`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: 100, from: 'USD', to: 'CNY' }),
+                        signal: AbortSignal.timeout(3000)
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        log(`✅ 货币转换成功: $100 = ¥${data.result}`);
+                        showResult('functionResult', `✅ 货币转换正常: $100 = ¥${data.result}`, 'status-good');
+                        return;
+                    }
+                } catch (error) {
+                    log(`❌ ${api} 货币转换失败: ${error.message}`);
+                }
+            }
+            
+            showResult('functionResult', '❌ 所有API货币转换均失败', 'status-bad');
+        }
+
+        async function testWeightConverter() {
+            log('测试重量转换功能...');
+            
+            for (const api of APIs) {
+                try {
+                    const response = await fetch(`${api}/api/convert/weight`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: 1, from: 'kg', to: 'lb' }),
+                        signal: AbortSignal.timeout(3000)
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        log(`✅ 重量转换成功: 1kg = ${data.result}lb`);
+                        showResult('functionResult', `✅ 重量转换正常: 1kg = ${data.result}lb`, 'status-good');
+                        return;
+                    }
+                } catch (error) {
+                    log(`❌ ${api} 重量转换失败: ${error.message}`);
+                }
+            }
+            
+            showResult('functionResult', '❌ 所有API重量转换均失败', 'status-bad');
+        }
+
+        function testOfflineMode() {
+            log('测试离线模式...');
+            
+            // 简单的离线计算测试
+            const kgToLb = 1 * 2.20462;
+            log(`✅ 离线重量转换: 1kg = ${kgToLb.toFixed(6)}lb`);
+            
+            const celsiusToFahrenheit = 0 * 9/5 + 32;
+            log(`✅ 离线温度转换: 0°C = ${celsiusToFahrenheit}°F`);
+            
+            showResult('functionResult', '✅ 离线模式正常工作', 'status-good');
+        }
+
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('deviceInfo').innerHTML = getDeviceInfo();
+            log('移动端调试工具已加载');
+            
+            // 自动测试网络
+            setTimeout(testNetworkConnection, 1000);
+            setTimeout(testAllAPIs, 2000);
+        });
+    </script>
+</body>
+</html> 

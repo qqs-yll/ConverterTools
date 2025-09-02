@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API端点测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .api-test {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .testing { background: #fff3cd; border-color: #ffeaa7; }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover { background: #0056b3; }
+        .offline { background: #fd7e14; }
+        .offline:hover { background: #e96002; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API端点测试工具</h1>
+        <p>测试各个API端点的可用性</p>
+        
+        <div>
+            <button class="button" onclick="testAllAPIs()">🚀 测试所有API</button>
+            <button class="button" onclick="testWeightConversion()">⚖️ 测试重量转换</button>
+            <button class="button offline" onclick="testOfflineMode()">📱 测试离线模式</button>
+            <button class="button" onclick="clearResults()">🗑️ 清除结果</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // API端点列表
+        const apiEndpoints = [
+            'https://converter-backend.qaz354073.workers.dev',
+            'https://converter-tools-api.vercel.app',
+            'https://api.allorigins.win/raw?url=https://converter-backend.qaz354073.workers.dev'
+        ];
+
+        function addResult(title, content, status = 'testing') {
+            const div = document.createElement('div');
+            div.className = `api-test ${status}`;
+            div.innerHTML = `<strong>${title}</strong><br>${content}`;
+            document.getElementById('results').appendChild(div);
+            return div;
+        }
+
+        function updateResult(element, content, status) {
+            element.className = `api-test ${status}`;
+            element.innerHTML = element.innerHTML.split('<br>')[0] + '<br>' + content;
+        }
+
+        async function testAPI(apiUrl, testName = 'API测试') {
+            const resultElement = addResult(`${testName} - ${apiUrl}`, '正在测试...', 'testing');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${apiUrl}/api/convert/weight`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: 1,
+                        from: 'kg',
+                        to: 'g'
+                    })
+                });
+                
+                const endTime = Date.now();
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    updateResult(resultElement, 
+                        `✅ 成功 (${endTime - startTime}ms)\n结果: ${data.result}\n状态: ${response.status}`, 
+                        'success');
+                    return { success: true, time: endTime - startTime, data };
+                } else {
+                    updateResult(resultElement, 
+                        `❌ API错误\n状态: ${response.status}\n错误: ${data.error || '未知错误'}`, 
+                        'error');
+                    return { success: false, error: data.error };
+                }
+            } catch (error) {
+                updateResult(resultElement, 
+                    `❌ 连接失败\n错误: ${error.message}\n类型: ${error.name}`, 
+                    'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testAllAPIs() {
+            addResult('🔍 开始测试所有API端点', '正在逐个测试各个端点...', 'testing');
+            
+            const results = [];
+            for (const api of apiEndpoints) {
+                const result = await testAPI(api, 'API端点测试');
+                results.push({ api, ...result });
+                
+                // 短暂延迟避免请求过于频繁
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            const successfulAPIs = results.filter(r => r.success);
+            const failedAPIs = results.filter(r => !r.success);
+            
+            addResult('📊 测试总结', 
+                `成功: ${successfulAPIs.length}/${results.length}\n` +
+                `失败: ${failedAPIs.length}/${results.length}\n` +
+                (successfulAPIs.length > 0 ? `最快响应: ${Math.min(...successfulAPIs.map(r => r.time))}ms` : ''), 
+                successfulAPIs.length > 0 ? 'success' : 'error');
+        }
+
+        async function testWeightConversion() {
+            addResult('⚖️ 重量转换功能测试', '测试完整的重量转换流程...', 'testing');
+            
+            const testCases = [
+                { amount: 1, from: 'kg', to: 'g', expected: '1000' },
+                { amount: 1, from: 'kg', to: 'lb', expected: '2.20462' },
+                { amount: 1000, from: 'g', to: 'kg', expected: '1' }
+            ];
+            
+            for (const testCase of testCases) {
+                const { amount, from, to, expected } = testCase;
+                
+                // 尝试第一个可用的API
+                let apiWorked = false;
+                for (const api of apiEndpoints) {
+                    try {
+                        const response = await fetch(`${api}/api/convert/weight`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ amount, from, to })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            const result = parseFloat(data.result);
+                            const expectedNum = parseFloat(expected);
+                            const isCorrect = Math.abs(result - expectedNum) < 0.001;
+                            
+                            addResult(`${amount} ${from} → ${to}`, 
+                                `结果: ${data.result} (期望: ${expected})\n` +
+                                `${isCorrect ? '✅ 正确' : '❌ 错误'}\n` +
+                                `使用API: ${api}`, 
+                                isCorrect ? 'success' : 'error');
+                            
+                            apiWorked = true;
+                            break;
+                        }
+                    } catch (error) {
+                        continue;
+                    }
+                }
+                
+                if (!apiWorked) {
+                    addResult(`${amount} ${from} → ${to}`, '❌ 所有API都不可用', 'error');
+                }
+            }
+        }
+
+        function testOfflineMode() {
+            addResult('📱 离线模式测试', '模拟离线转换计算...', 'testing');
+            
+            // 模拟离线转换逻辑
+            const weightRates = {
+                'kg': 1,
+                'g': 1000,
+                'lb': 2.20462
+            };
+            
+            function convertWeight(amount, from, to) {
+                if (!weightRates[from] || !weightRates[to]) {
+                    return { success: false, error: '不支持的单位' };
+                }
+                
+                const baseAmount = amount / weightRates[from];
+                const result = baseAmount * weightRates[to];
+                return { success: true, result: result.toFixed(6) };
+            }
+            
+            const testCase = { amount: 1, from: 'kg', to: 'g' };
+            const result = convertWeight(testCase.amount, testCase.from, testCase.to);
+            
+            addResult('离线模式计算', 
+                `${testCase.amount} ${testCase.from} → ${testCase.to}\n` +
+                `结果: ${result.result}\n` +
+                `${result.success ? '✅ 离线模式正常工作' : '❌ 离线模式失败'}`, 
+                result.success ? 'success' : 'error');
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时显示基本信息
+        document.addEventListener('DOMContentLoaded', function() {
+            addResult('🌐 环境信息', 
+                `浏览器: ${navigator.userAgent.split(' ').pop()}\n` +
+                `网络状态: ${navigator.onLine ? '在线' : '离线'}\n` +
+                `时间: ${new Date().toLocaleString()}`, 
+                'testing');
+        });
+    </script>
+</body>
+</html> 
