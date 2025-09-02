@@ -99,6 +99,6 @@ ConverterTools/
 
 欢迎提交Issue和Pull Request！
 
-## �� 许可证
+## 📄 许可证
 
-MIT License 
+MIT License
