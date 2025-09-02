@@ -13,7 +13,7 @@ import {
 import { SwapHoriz as SwapIcon } from '@mui/icons-material';
 import { useLanguage } from '../contexts/LanguageContext';
 import ConverterLayout from '../components/ConverterLayout';
-import { getAPI } from '../config';
+import { convertLength } from '../utils/offlineConverter';
 
 const LengthConverter: React.FC = () => {
   const { t } = useLanguage();
@@ -22,7 +22,6 @@ const LengthConverter: React.FC = () => {
   const [toUnit, setToUnit] = useState<string>('ft');
   const [result, setResult] = useState<string>('');
   const [rate, setRate] = useState<number | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'error' | 'info' | 'success' | 'warning'}>({
     open: false,
@@ -43,7 +42,7 @@ const LengthConverter: React.FC = () => {
     { value: 'ly', label: t('lengthUnits.ly') },
   ];
 
-  const handleConvert = async () => {
+  const handleConvert = () => {
     if (!value) {
       setSnackbar({ open: true, message: t('common.pleaseEnterValue'), severity: 'error' });
       setResult('');
@@ -59,33 +58,19 @@ const LengthConverter: React.FC = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch(`${getAPI()}/api/convert/length`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: numValue,
-          from: fromUnit,
-          to: toUnit,
-        }),
-      });
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error(t('common.serverError'));
+      const conversionResult = convertLength(numValue, fromUnit, toUnit);
+      if (conversionResult.success) {
+        setResult(conversionResult.result || '');
+        setRate(conversionResult.rate || null);
+      } else {
+        setSnackbar({ 
+          open: true, 
+          message: conversionResult.error || t('common.conversionFailed'), 
+          severity: 'error' 
+        });
+        setResult('');
+        setRate(null);
       }
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || t('common.conversionFailed'));
-      }
-      const resultNum = typeof data.result === 'string' ? parseFloat(data.result) : data.result;
-      setResult(resultNum.toFixed(6));
-      setRate(data.rate);
-      setLastUpdated(new Date().toLocaleTimeString());
-    } catch (error: any) {
-      setSnackbar({ open: true, message: error.message || t('common.conversionFailedPleaseTryAgain'), severity: 'error' });
-      setResult('');
-      setRate(null);
     } finally {
       setLoading(false);
     }
@@ -216,8 +201,6 @@ const LengthConverter: React.FC = () => {
             {rate && (
               <Typography variant="body2" color="text.secondary">
                 {t('common.conversionRate')}: 1 {fromUnit} = {rate.toFixed(6)} {toUnit}
-                <br />
-                {t('common.lastUpdated')}: {lastUpdated}
               </Typography>
             )}
           </Box>

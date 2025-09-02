@@ -5,6 +5,7 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
+    serverActions: true,
   },
   compress: true,
   reactStrictMode: true,
@@ -12,8 +13,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/convert/:path*',
-        destination: '/api/convert/:path*',
+        source: '/api/:path*',
+        destination: '/api/:path*',
       },
     ];
   },

@@ -6,10 +6,12 @@ import {
   Box,
   Typography,
   Stack,
+  IconButton,
 } from '@mui/material';
+import { SwapHoriz as SwapIcon } from '@mui/icons-material';
 import { useLanguage } from '../contexts/LanguageContext';
 import ConverterLayout from '../components/ConverterLayout';
-import { getAPI } from '../config';
+import { convertTemperature } from '../utils/offlineConverter';
 
 const TemperatureConverter: React.FC = () => {
   const { t } = useLanguage();
@@ -18,34 +20,25 @@ const TemperatureConverter: React.FC = () => {
   const [toUnit, setToUnit] = useState<string>('F');
   const [result, setResult] = useState<string>('');
 
-  const handleConvert = async () => {
+  const handleConvert = () => {
     if (!value) {
       setResult(t('common.pleaseEnterValue'));
       return;
     }
 
     try {
-      const response = await fetch(`${getAPI()}/api/convert/temperature`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: parseFloat(value),
-          from: fromUnit,
-          to: toUnit,
-        }),
-      });
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error(t('common.serverError'));
+      const numValue = parseFloat(value);
+      if (isNaN(numValue)) {
+        setResult(t('common.pleaseEnterValidNumber'));
+        return;
       }
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || t('common.conversionFailed'));
+      
+      const conversionResult = convertTemperature(numValue, fromUnit, toUnit);
+      if (conversionResult.success) {
+        setResult(conversionResult.result || '');
+      } else {
+        throw new Error(conversionResult.error || t('common.conversionFailed'));
       }
-      const resultNum = typeof data.result === 'string' ? parseFloat(data.result) : data.result;
-      setResult(resultNum.toFixed(2));
     } catch (error) {
       setResult(t('common.conversionFailedPleaseTryAgain'));
     }
@@ -76,7 +69,7 @@ const TemperatureConverter: React.FC = () => {
           }}
         />
         
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
           <TextField
             fullWidth
             select
@@ -108,6 +101,18 @@ const TemperatureConverter: React.FC = () => {
               </MenuItem>
             ))}
           </TextField>
+          
+          <IconButton
+            onClick={() => {
+              const temp = fromUnit;
+              setFromUnit(toUnit);
+              setToUnit(temp);
+              setResult('');
+            }}
+            sx={{ bgcolor: 'background.default', '&:hover': { bgcolor: 'action.hover' } }}
+          >
+            <SwapIcon />
+          </IconButton>
           
           <TextField
             fullWidth

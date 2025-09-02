@@ -317,44 +317,63 @@ export async function POST(request: NextRequest) {
     console.log('API Request:', { url, pathname, body, environment: isLocalhost ? 'local' : 'production' });
     
     // 货币转换 - 修复URL匹配逻辑
-    if (pathname.includes('/api/convert/currency') || body.type === 'currency') {
-      console.log('处理货币转换请求');
-      const { value, fromCurrency, toCurrency, amount, from, to } = body;
-      const finalValue = value || amount;
-      const finalFrom = fromCurrency || from;
-      const finalTo = toCurrency || to;
-      
-      console.log('货币转换参数:', { finalValue, finalFrom, finalTo });
-      
-      if (!finalValue || !finalFrom || !finalTo) {
-        console.log('货币转换参数缺失');
-        return NextResponse.json({ 
-          success: false, 
-          error: 'Missing required parameters: value/amount, fromCurrency/from, toCurrency/to' 
-        }, { status: 400 });
-      }
-      
-      try {
-        const result = await convertCurrency(parseFloat(finalValue), finalFrom, finalTo);
-        console.log('货币转换结果:', result);
-        
-        // 本地环境添加快速响应标记
-        if (isLocalhost) {
-          console.log('本地货币转换完成，响应时间: 立即');
-        }
-        
-        return NextResponse.json(result);
-      } catch (error) {
-        console.error('货币转换函数错误:', error);
-        return NextResponse.json({ 
-          success: false, 
-          error: (error as Error).message || 'Currency conversion failed' 
-        }, { status: 400 });
-      }
+    if (pathname.endsWith('/currency') || body.type === 'currency') {
+    console.log('处理货币转换请求');
+    const { value, fromCurrency, toCurrency, amount, from, to } = body;
+    const finalValue = value || amount;
+    const finalFrom = fromCurrency || from;
+    const finalTo = toCurrency || to;
+    
+    console.log('货币转换参数:', { finalValue, finalFrom, finalTo });
+    
+    if (!finalValue || !finalFrom || !finalTo) {
+      console.log('货币转换参数缺失');
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Missing required parameters: value/amount, fromCurrency/from, toCurrency/to' 
+      }, { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
+    try {
+      // 直接使用固定汇率，不再尝试外部API
+      const fromRate = fixedRates[finalFrom as keyof typeof fixedRates];
+      const toRate = fixedRates[finalTo as keyof typeof fixedRates];
+      
+      if (!fromRate || !toRate) {
+        throw new Error(`Unsupported currency: ${finalFrom} or ${finalTo}`);
+      }
+      
+      const rate = toRate / fromRate;
+      const result = parseFloat(finalValue) * rate;
+      
+      const responseData = { 
+        success: true,
+        result: result.toFixed(2), 
+        rate: rate,
+        message: '使用固定汇率计算'
+      };
+      
+      console.log('货币转换结果:', responseData);
+      return NextResponse.json(responseData, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      console.error('货币转换函数错误:', error);
+      return NextResponse.json({ 
+        success: false, 
+        error: (error as Error).message || 'Currency conversion failed' 
+      }, { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+    
     // 重量转换 - 本地优先
-    if (pathname.includes('/api/convert/weight') || body.type === 'weight') {
+    if (pathname.endsWith('/weight') || body.type === 'weight') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -377,7 +396,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 长度转换 - 本地优先
-    if (pathname.includes('/api/convert/length') || body.type === 'length') {
+    if (pathname.endsWith('/length') || body.type === 'length') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -400,7 +419,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 体积转换 - 本地优先
-    if (pathname.includes('/api/convert/volume') || body.type === 'volume') {
+    if (pathname.endsWith('/volume') || body.type === 'volume') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -423,7 +442,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 温度转换 - 本地优先
-    if (pathname.includes('/api/convert/temperature') || body.type === 'temperature') {
+    if (pathname.endsWith('/temperature') || body.type === 'temperature') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -446,14 +465,19 @@ export async function POST(request: NextRequest) {
     }
     
     // 时区转换
-    if (pathname.includes('/api/convert/timezone') || body.type === 'timezone') {
+    if (pathname.endsWith('/timezone') || body.type === 'timezone') {
       const { dateTime, fromTimezone, toTimezone } = body;
       const result = convertTimezone(dateTime, fromTimezone, toTimezone);
       return NextResponse.json(result);
     }
     
     console.log('未找到匹配的API端点，URL:', url);
-    return NextResponse.json({ error: 'API endpoint not found' }, { status: 404 });
+    return NextResponse.json({ 
+      error: 'API endpoint not found' 
+    }, { 
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
     
   } catch (error) {
     console.error('API Error:', error);

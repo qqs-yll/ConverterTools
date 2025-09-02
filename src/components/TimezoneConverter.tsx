@@ -13,8 +13,7 @@ import {
 import { SwapHoriz as SwapIcon, WifiOff as WifiOffIcon } from '@mui/icons-material';
 import { useLanguage } from '../contexts/LanguageContext';
 import ConverterLayout from '../components/ConverterLayout';
-import { getAPI, isOfflineMode, disableOfflineMode } from '../config';
-import { convertTimezone as offlineConvertTimezone } from '../utils/offlineConverter';
+import { convertTimezone } from '../utils/offlineConverter';
 
 const TimeZoneConverter: React.FC = () => {
   const { t } = useLanguage();
@@ -23,12 +22,6 @@ const TimeZoneConverter: React.FC = () => {
   const [toTimezone, setToTimezone] = useState<string>('Asia/Shanghai');
   const [result, setResult] = useState<{ original: string; converted: string } | null>(null);
   const [error, setError] = useState<string>('');
-  const [offline, setOffline] = useState<boolean>(false);
-
-  useEffect(() => {
-    setOffline(isOfflineMode());
-  }, []);
-
   const handleConvert = async () => {
     if (!dateTime) {
       setError(t('common.pleaseSelectDateTime'));
@@ -42,93 +35,22 @@ const TimeZoneConverter: React.FC = () => {
       return;
     }
 
-    // 离线模式处理
-    if (offline) {
-      try {
-        const offlineResult = offlineConvertTimezone(dateTime, fromTimezone, toTimezone);
-        if (offlineResult.success && offlineResult.result) {
-          const parsed = JSON.parse(offlineResult.result);
-          setResult({
-            original: parsed.original,
-            converted: parsed.converted
-          });
-          setError('');
-        } else {
-          setError(offlineResult.error || t('common.conversionFailedPleaseTryAgain'));
-          setResult(null);
-        }
-      } catch (error) {
-        setError(error instanceof Error ? error.message : t('common.conversionFailedPleaseTryAgain'));
-        setResult(null);
-      }
-      return;
-    }
-
-    // 在线模式处理
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
-
-      const response = await fetch(`${getAPI()}/api/convert/timezone`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          dateTime,
-          fromTimezone,
-          toTimezone
-        }),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error(t('errors.invalidResponse'));
-      }
-      
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || t('errors.conversionFailed'));
-      }
-      
-      setResult({
-        original: data.original,
-        converted: data.converted
-      });
-      setError('');
-      
-      // 成功时重置全局离线模式
-      disableOfflineMode();
-      setOffline(false);
-    } catch (error) {
-      // 如果网络请求失败，自动切换到离线模式
-      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) {
-        console.log('API超时或失败，切换到离线模式');
-        setOffline(true);
-        try {
-          const offlineResult = offlineConvertTimezone(dateTime, fromTimezone, toTimezone);
-          if (offlineResult.success && offlineResult.result) {
-            const parsed = JSON.parse(offlineResult.result);
-            setResult({
-              original: parsed.original,
-              converted: parsed.converted
-            });
-            setError('');
-          } else {
-            setError(offlineResult.error || t('common.conversionFailedPleaseTryAgain'));
-            setResult(null);
-          }
-        } catch (offlineError) {
-          setError(offlineError instanceof Error ? offlineError.message : t('common.conversionFailedPleaseTryAgain'));
-          setResult(null);
-        }
+      const conversionResult = convertTimezone(dateTime, fromTimezone, toTimezone);
+      if (conversionResult.success && conversionResult.result) {
+        const parsed = JSON.parse(conversionResult.result);
+        setResult({
+          original: parsed.original,
+          converted: parsed.converted
+        });
+        setError('');
       } else {
-        setError(error instanceof Error ? error.message : t('common.conversionFailedPleaseTryAgain'));
+        setError(conversionResult.error || t('common.conversionFailedPleaseTryAgain'));
         setResult(null);
       }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('common.conversionFailedPleaseTryAgain'));
+      setResult(null);
     }
   };
 
@@ -164,12 +86,6 @@ const TimeZoneConverter: React.FC = () => {
       icon="🌍"
     >
       <Stack spacing={3} width="100%">
-        {offline && (
-          <Alert severity="info" icon={<WifiOffIcon />}>
-            {t('common.offlineMode')}
-          </Alert>
-        )}
-        
         <TextField
           fullWidth
           label={t('common.selectDateTime')}
@@ -283,15 +199,6 @@ const TimeZoneConverter: React.FC = () => {
           >
             {t('common.convert').toUpperCase()}
           </Button>
-          {offline && (
-            <Chip
-              icon={<WifiOffIcon />}
-              label={t('common.offline')}
-              size="small"
-              color="default"
-              variant="outlined"
-            />
-          )}
         </Stack>
 
         {error && (
