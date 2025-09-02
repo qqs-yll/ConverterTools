@@ -17,8 +17,6 @@ import {
   Divider,
   Switch,
   FormControlLabel,
-  useScrollTrigger,
-  Slide,
   Tooltip,
   Avatar
 } from '@mui/material';
@@ -34,9 +32,7 @@ import {
   MusicNote as Mp3Icon,
   PictureAsPdf as PdfIcon,
   Image as ImageIcon,
-  Language as LanguageIcon,
-  Brightness4 as DarkIcon,
-  Brightness7 as LightIcon
+  Language as LanguageIcon
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -53,23 +49,14 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-function HideOnScroll(props: { children: React.ReactElement }) {
-  const { children } = props;
-  const trigger = useScrollTrigger();
-
-  return (
-    <Slide appear={false} direction="down" in={!trigger}>
-      {children}
-    </Slide>
-  );
-}
+// 移除了HideOnScroll组件，使导航栏在滚动时保持可见
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { t, language, setLanguage } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  // 移除了深色模式状态
   const pathname = usePathname();
 
   const navItems: NavItem[] = [
@@ -93,10 +80,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setLanguage(language === 'en' ? 'zh' : 'en');
   };
 
-  const handleThemeToggle = () => {
-    setDarkMode(!darkMode);
-  };
-
+  // 移除了深色模式切换处理函数
   const isActive = (path: string) => {
     if (path === '/') {
       return pathname === '/';
@@ -159,27 +143,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           }
           label={language === 'en' ? '中文' : 'English'}
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={darkMode}
-              onChange={handleThemeToggle}
-              icon={<LightIcon />}
-              checkedIcon={<DarkIcon />}
-            />
-          }
-          label={darkMode ? t('common.lightMode') : t('common.darkMode')}
-        />
+        {/* 移除了深色模式切换控件 */}
       </Box>
     </Box>
   );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <HideOnScroll>
-        <AppBar position="sticky" elevation={1}>
-          <Container maxWidth="xl">
-            <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
+      <AppBar position="sticky" elevation={1}>
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
               {/* 左侧：Logo + 应用标题 */}
               <Box sx={{ 
                 display: 'flex', 
@@ -290,19 +263,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <Tooltip title={language === 'en' ? '切换到中文' : 'Switch to English'} arrow>
                   <IconButton
                     onClick={handleLanguageToggle}
-                    sx={{ color: 'white', mx: 1 }}
+                    sx={{ 
+                      color: 'white',
+                      mx: { xs: 0, md: 0.5 }, // 电脑端减少左边距
+                      ml: { xs: 2, md: 0 } // 移动端增加右边距
+                    }}
                   >
                     <LanguageIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={darkMode ? t('common.lightMode') : t('common.darkMode')} arrow>
-                  <IconButton
-                    onClick={handleThemeToggle}
-                    sx={{ color: 'white', mx: 1 }}
-                  >
-                    {darkMode ? <LightIcon /> : <DarkIcon />}
-                  </IconButton>
-                </Tooltip>
+                {/* 移除了深色模式切换按钮 */}
                 {/* 移动端菜单按钮 */}
                 <IconButton
                   color="inherit"
@@ -318,9 +288,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </IconButton>
               </Box>
             </Toolbar>
-          </Container>
-        </AppBar>
-      </HideOnScroll>
+        </Container>
+      </AppBar>
 
       <Box component="main" sx={{ flexGrow: 1 }}>
         {children}
