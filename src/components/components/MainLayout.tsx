@@ -19,7 +19,7 @@ import {
   Language as LanguageIcon
 } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;

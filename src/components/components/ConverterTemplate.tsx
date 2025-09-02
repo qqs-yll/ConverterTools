@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Box, Typography, Button, Paper, Alert } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ConverterTemplateProps {
   title: string;
