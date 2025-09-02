@@ -129,19 +129,19 @@ const Home: React.FC = () => {
       nameKey: 'testimonials.items.user1.name',
       roleKey: 'testimonials.items.user1.role',
       textKey: 'testimonials.items.user1.text',
-      avatar: '👨‍💼'
+      avatar: '/芳铭.jpg'
     },
     {
       nameKey: 'testimonials.items.user2.name',
       roleKey: 'testimonials.items.user2.role',
       textKey: 'testimonials.items.user2.text',
-      avatar: '👩‍🎓'
+      avatar: '/婷婷.jpg'
     },
     {
       nameKey: 'testimonials.items.user3.name',
       roleKey: 'testimonials.items.user3.role',
       textKey: 'testimonials.items.user3.text',
-      avatar: '👨‍💻'
+      avatar: '/君君.jpg'
     }
   ];
 
@@ -702,15 +702,12 @@ const Home: React.FC = () => {
                         gap: { xs: 1, sm: 2 } // 移动端减少头像和文字间距
                       }}>
                         <Avatar 
+                          src={testimonial.avatar}
                           sx={{ 
                             width: { xs: 40, sm: 56 }, // 移动端头像更小
                             height: { xs: 40, sm: 56 }, 
-                            fontSize: { xs: '1.5rem', sm: '2rem' }, // 移动端表情符号更小
-                            bgcolor: theme.palette.primary.main
                           }}
-                        >
-                          {testimonial.avatar}
-                        </Avatar>
+                        />
                         <Box>
                           <Typography 
                             variant="h6" 

@@ -200,17 +200,17 @@ export const translations = {
       title: 'User Testimonials',
       items: {
         user1: {
-          name: 'John Smith',
+          name: 'Fangming·Taowu',
           role: 'Professional Trader',
           text: 'The currency converter is incredibly accurate and updates in real-time. It\'s become an essential tool for my daily trading activities.'
         },
         user2: {
-          name: 'Sarah Johnson',
-          role: 'Engineering Student',
-          text: 'As an engineering student, I need to convert units frequently. This tool has made my calculations much easier and more reliable.'
+          name: 'The fish in the Gu You Tangle pose',
+          role: 'Accounting Student',
+          text: 'As an accounting student, I need to convert units frequently. This tool has made my calculations much easier and more reliable.'
         },
         user3: {
-          name: 'Michael Chen',
+          name: 'Shen Qingfen',
           role: 'Software Developer',
           text: 'The API integration is seamless, and the documentation is clear. It\'s been a great addition to our development toolkit.'
         }
@@ -572,17 +572,17 @@ export const translations = {
       title: '用户评价',
       items: {
         user1: {
-          name: '约翰·史密斯',
+          name: '芳铭·桃雾',
           role: '专业交易员',
           text: '货币转换器非常准确，并且实时更新。它已经成为我日常交易活动中必不可少的工具。'
         },
         user2: {
-          name: '莎拉·约翰逊',
-          role: '工程学学生',
-          text: '作为一名工程学学生，我经常需要转换单位。这个工具使我的计算更加容易和可靠。'
+          name: '葛优躺的鱼',
+          role: '会计学学生',
+          text: '作为一名会计学学生，我经常需要转换单位。这个工具使我的计算更加容易和可靠。'
         },
         user3: {
-          name: '陈明',
+          name: '浅清森',
           role: '软件开发者',
           text: 'API集成非常顺畅，文档清晰明了。它是我们开发工具包的重要补充。'
         }
