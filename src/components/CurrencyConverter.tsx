@@ -10,7 +10,6 @@ import {
 } from '@mui/material';
 import { SwapHoriz as SwapIcon } from '@mui/icons-material';
 import { useLanguage } from '../contexts/LanguageContext';
-import { getAPI } from '../config';
 import ConverterLayout from '../components/ConverterLayout';
 
 const CurrencyConverter: React.FC = () => {
@@ -28,6 +27,14 @@ const CurrencyConverter: React.FC = () => {
       return;
     }
 
+    // 如果源货币和目标货币相同，直接返回输入值
+    if (fromCurrency === toCurrency) {
+      setResult(parseFloat(amount).toFixed(4));
+      setExchangeRate('1.0000');
+      setLastUpdated(new Date().toLocaleString());
+      return;
+    }
+
     console.log('=== 货币转换开始 ===');
     console.log('环境信息:', {
       userAgent: navigator.userAgent,
@@ -39,27 +46,31 @@ const CurrencyConverter: React.FC = () => {
       protocol: window.location.protocol
     });
     
-    const apiUrl = `/api/convert/currency`;
-    console.log('API URL:', apiUrl);
-    
-    const requestData = {
-      value: amount,
-      fromCurrency: fromCurrency,
-      toCurrency: toCurrency,
-    };
-    console.log('请求数据:', requestData);
+      const apiUrl = `https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`;
+      console.log('API URL:', apiUrl);
 
-    try {
-      console.log('开始发送fetch请求...');
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
+      try {
+        console.log('开始发送fetch请求...');
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API请求失败: ${response.status}`);
+        }
+        
+        const responseData = await response.json();
+        console.log('汇率数据:', responseData);
+        
+        if (!responseData.rates || !responseData.rates[toCurrency]) {
+          throw new Error('无法获取目标货币汇率');
+        }
+        
+        const rate = responseData.rates[toCurrency];
+        const resultNum = parseFloat(amount) * rate;
       
       console.log('响应收到:', {
         status: response.status,
@@ -76,19 +87,10 @@ const CurrencyConverter: React.FC = () => {
         throw new Error(`${t('common.serverError')} (Content-Type: ${contentType})`);
       }
       
-      const data = await response.json();
-      console.log('解析的响应数据:', data);
-      
-      if (!response.ok) {
-        console.error('API错误响应:', data);
-        throw new Error(data.error || t('common.conversionFailed'));
-      }
-      
-      const resultNum = typeof data.result === 'string' ? parseFloat(data.result) : data.result;
       console.log('最终结果:', resultNum);
       
-      setResult(resultNum.toFixed(2));
-      setExchangeRate(data.rate.toFixed(4));
+      setResult(resultNum.toFixed(4));
+      setExchangeRate(rate.toFixed(4));
       setLastUpdated(new Date().toLocaleString());
       
       console.log('=== 货币转换成功 ===');

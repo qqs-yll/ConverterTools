@@ -76,25 +76,40 @@ const Home: React.FC = () => {
       icon: '🖼️' 
     }
   ];
-
   const features = [
     {
-      icon: <CheckCircleIcon sx={{ fontSize: 40 }} />,
+      icon: <CheckCircleIcon sx={{ 
+        fontSize: { xs: 32, sm: 40 },
+        color: '#4CAF50',
+        '&:hover': { color: '#388E3C' }
+      }} />,
       titleKey: 'features.items.accuracy.title',
       descriptionKey: 'features.items.accuracy.description'
     },
     {
-      icon: <SpeedIcon sx={{ fontSize: 40 }} />,
+      icon: <SpeedIcon sx={{ 
+        fontSize: { xs: 32, sm: 40 },
+        color: '#2196F3',
+        '&:hover': { color: '#1976D2' }
+      }} />,
       titleKey: 'features.items.speed.title',
       descriptionKey: 'features.items.speed.description'
     },
     {
-      icon: <UnitsIcon sx={{ fontSize: 40 }} />,
+      icon: <UnitsIcon sx={{ 
+        fontSize: { xs: 32, sm: 40 },
+        color: '#FF9800',
+        '&:hover': { color: '#F57C00' }
+      }} />,
       titleKey: 'features.items.units.title',
       descriptionKey: 'features.items.units.description'
     },
     {
-      icon: <InterfaceIcon sx={{ fontSize: 40 }} />,
+      icon: <InterfaceIcon sx={{ 
+        fontSize: { xs: 32, sm: 40 },
+        color: '#9C27B0',
+        '&:hover': { color: '#7B1FA2' }
+      }} />,
       titleKey: 'features.items.interface.title',
       descriptionKey: 'features.items.interface.description'
     }
