@@ -13,7 +13,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 使用useState的初始化函数，确保服务端和客户端一致
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('zh');
   const [isClient, setIsClient] = useState(false);
 
   // 当语言改变时，保存到localStorage
@@ -48,11 +48,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return typeof value === 'string' ? value : key;
   }, [language]);
 
-  // 在服务端渲染时，始终返回英文翻译，避免hydration错误
+  // 在服务端渲染时，始终返回中文翻译，避免hydration错误
   if (!isClient) {
     const tServer = (key: string) => {
       const keys = key.split('.');
-      let value: any = translations.en;
+      let value: any = translations.zh;
       
       for (const k of keys) {
         if (value && typeof value === 'object') {
@@ -66,7 +66,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     return (
-      <LanguageContext.Provider value={{ language: 'en', setLanguage: handleLanguageChange, t: tServer }}>
+      <LanguageContext.Provider value={{ language: 'zh', setLanguage: handleLanguageChange, t: tServer }}>
         {children}
       </LanguageContext.Provider>
     );

@@ -286,7 +286,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </Box>
 
               {/* 右侧：语言和主题切换 */}
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Tooltip title={language === 'en' ? '切换到中文' : 'Switch to English'} arrow>
                   <IconButton
                     onClick={handleLanguageToggle}
@@ -303,6 +303,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     {darkMode ? <LightIcon /> : <DarkIcon />}
                   </IconButton>
                 </Tooltip>
+                {/* 移动端菜单按钮 */}
+                <IconButton
+                  color="inherit"
+                  aria-label="open drawer"
+                  edge="start"
+                  onClick={handleDrawerToggle}
+                  sx={{ 
+                    display: { xs: 'block', md: 'none' },
+                    ml: 1
+                  }}
+                >
+                  <MenuIcon />
+                </IconButton>
               </Box>
             </Toolbar>
           </Container>

@@ -1,27 +1,20 @@
 // API配置
 const config = {
-  // 主要API地址列表（按优先级排序）
+  // 主要API地址
   apiEndpoints: [
     // 本地开发环境优先
     ...(typeof window !== 'undefined' && window.location.hostname === 'localhost' 
       ? ['http://localhost:3000'] 
       : []
     ),
-    // 第一优先：您的自定义域名API（移动端兼容性最好）
-    'https://api.tecgw.com',
-    
-    // 第二备用：新的Vercel后端
-    'https://converter-tools-backend.vercel.app',
-    
-    // 第三备用：原Vercel后端
-    'https://converter-tools-qaz354073.vercel.app'
+    // 生产环境使用用户自定义域名
+    'https://www.convertertoolsqqs.online'
   ],
   
   // 离线模式配置
   offlineMode: false,
-  apiTimeout: 3000, // 3秒超时（恢复正常）
-  maxRetries: 1,    // 减少重试次数，快速切换到下一个API或离线模式
-  forceOfflineOnMobile: false, // 移动端不强制离线模式
+  apiTimeout: 3000, // 3秒超时
+  maxRetries: 1,    // 减少重试次数
   
   // 环境配置
   isDevelopment: typeof window !== 'undefined' && window.location.hostname === 'localhost',
@@ -77,40 +70,13 @@ export const testAPIConnection = async (apiUrl: string): Promise<boolean> => {
 
 // 获取可用的API地址
 export const getWorkingAPI = async (): Promise<string> => {
-  // 检查是否应该强制使用离线模式
-  if (config.forceOfflineOnMobile && isMobile()) {
-    console.log('移动端强制启用离线模式');
-    config.offlineMode = true;
-    return config.apiEndpoints[0]; // 返回第一个API作为占位符
-  }
+  // 直接使用生产环境API，不进行复杂测试
+  const api = config.apiEndpoints.find(ep => 
+    ep.includes('convertertoolsqqs.online') || 
+    (config.isDevelopment && ep.includes('localhost'))
+  );
   
-  // 如果之前有工作的API，优先使用
-  if (lastWorkingAPI && await testAPIConnection(lastWorkingAPI)) {
-    console.log(`使用上次工作的API: ${lastWorkingAPI}`);
-    return lastWorkingAPI;
-  }
-  
-  // 从当前索引开始测试所有API（移动端只测试一轮）
-  const maxTests = isMobile() ? 1 : config.apiEndpoints.length;
-  
-  for (let i = 0; i < maxTests; i++) {
-    const apiIndex = (currentAPIIndex + i) % config.apiEndpoints.length;
-    const api = config.apiEndpoints[apiIndex];
-    
-    if (await testAPIConnection(api)) {
-      currentAPIIndex = apiIndex;
-      lastWorkingAPI = api;
-      console.log(`找到可用的API: ${api}`);
-      return api;
-    }
-  }
-  
-  // 如果都失败，启用离线模式
-  config.offlineMode = true;
-  console.warn('所有API都不可用，已启用离线模式');
-  
-  // 返回第一个API（用于错误处理）
-  return config.apiEndpoints[0];
+  return api || config.apiEndpoints[0];
 };
 
 // 获取API基础URL
@@ -148,7 +114,10 @@ export const disableOfflineMode = (): void => {
 
 // 统一的API获取函数
 export const getAPI = (): string => {
-  return lastWorkingAPI || config.apiEndpoints[currentAPIIndex];
+  return config.apiEndpoints.find(ep => 
+    ep.includes('convertertoolsqqs.online') || 
+    (config.isDevelopment && ep.includes('localhost'))
+  ) || config.apiEndpoints[0];
 };
 
 // 向后兼容的函数名

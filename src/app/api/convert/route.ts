@@ -122,63 +122,39 @@ async function getExchangeRate(fromCurrency: string, toCurrency: string): Promis
     return calculatedRate;
   }
 
-  // 生产环境尝试多个免费的汇率API
-  const apis = [
-    {
-      name: 'ExchangeRate-API',
-      url: `https://api.exchangerate-api.com/v4/latest/${fromCurrency}`,
-      extractRate: (data: any) => data.rates?.[toCurrency]
-    },
-    {
-      name: 'Fixer.io (免费版)',
-      url: `https://api.fixer.io/latest?base=${fromCurrency}&symbols=${toCurrency}`,
-      extractRate: (data: any) => data.rates?.[toCurrency]
-    },
-    {
-      name: 'CurrencyAPI',
-      url: `https://api.currencyapi.com/v3/latest?apikey=free&base_currency=${fromCurrency}&currencies=${toCurrency}`,
-      extractRate: (data: any) => data.data?.[toCurrency]?.value
+  // 生产环境尝试获取实时汇率 - 使用与旧版本相同的API
+  try {
+    console.log('尝试获取实时汇率...');
+    
+    const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'ConverterTools/1.0'
+      },
+      signal: AbortSignal.timeout(5000)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API响应状态: ${response.status}`);
     }
-  ];
-
-  for (const api of apis) {
-    try {
-      console.log(`尝试使用 ${api.name} 获取汇率...`);
-      
-      const response = await fetch(api.url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'ConverterTools/1.0'
-        },
-        // 设置超时
-        signal: AbortSignal.timeout(5000)
-      });
-      
-      if (!response.ok) {
-        console.warn(`${api.name} 响应状态:`, response.status);
-        continue;
-      }
-      
-      const data = await response.json();
-      const rate = api.extractRate(data);
-      
-      if (rate && typeof rate === 'number' && rate > 0) {
-        console.log(`成功从 ${api.name} 获取汇率:`, rate);
-        return rate;
-      } else {
-        console.warn(`${api.name} 返回的汇率无效:`, rate);
-        continue;
-      }
-      
-    } catch (error) {
-      console.warn(`${api.name} 获取汇率失败:`, error);
-      continue;
+    
+    const data = await response.json();
+    const rate = data.rates?.[toCurrency];
+    
+    if (rate && typeof rate === 'number' && rate > 0) {
+      console.log(`成功获取实时汇率: ${fromCurrency} -> ${toCurrency} = ${rate}`);
+      return rate;
+    } else {
+      throw new Error('API返回的汇率无效');
     }
+    
+  } catch (error) {
+    console.warn('获取实时汇率失败，使用固定汇率:', error);
   }
 
-  // 如果所有实时API都失败，使用固定汇率
-  console.warn('所有实时汇率API都失败，使用固定汇率');
+  // 如果实时API失败，使用固定汇率
+  console.warn('使用固定汇率作为备用方案');
   
   const fromRate = fixedRates[fromCurrency as keyof typeof fixedRates];
   const toRate = fixedRates[toCurrency as keyof typeof fixedRates];
@@ -197,19 +173,31 @@ async function getExchangeRate(fromCurrency: string, toCurrency: string): Promis
 // 货币转换函数
 async function convertCurrency(value: number, fromCurrency: string, toCurrency: string) {
   if (fromCurrency === toCurrency) {
-    return { result: value, rate: 1 };
+    return { 
+      success: true,
+      result: value.toFixed(2), 
+      rate: 1 
+    };
   }
   
   const rate = await getExchangeRate(fromCurrency, toCurrency);
   const result = value * rate;
   
-  return { result, rate };
+  return { 
+    success: true,
+    result: result.toFixed(2), 
+    rate: rate 
+  };
 }
 
 // 通用单位转换函数
 function convertUnit(value: number, fromUnit: string, toUnit: string, rates: Record<string, number>) {
   if (fromUnit === toUnit) {
-    return { result: value, rate: 1 };
+    return { 
+      success: true,
+      result: value.toFixed(6), 
+      rate: 1 
+    };
   }
   
   const fromRate = rates[fromUnit];
@@ -223,13 +211,21 @@ function convertUnit(value: number, fromUnit: string, toUnit: string, rates: Rec
   const result = baseValue * toRate;
   const rate = toRate / fromRate;
   
-  return { result, rate };
+  return { 
+    success: true,
+    result: result.toFixed(6), 
+    rate: parseFloat(rate.toFixed(6))
+  };
 }
 
 // 温度转换函数
 function convertTemperature(value: number, fromUnit: string, toUnit: string) {
   if (fromUnit === toUnit) {
-    return { result: value, rate: 1 };
+    return { 
+      success: true,
+      result: value.toFixed(2), 
+      rate: 1 
+    };
   }
   
   let celsius: number;
@@ -271,7 +267,10 @@ function convertTemperature(value: number, fromUnit: string, toUnit: string) {
       throw new Error(`Unsupported temperature unit: ${toUnit}`);
   }
   
-  return { result, rate: 1 };
+  return { 
+    success: true,
+    result: result.toFixed(2)
+  };
 }
 
 // 时区转换函数
@@ -295,8 +294,9 @@ function convertTimezone(dateTime: string, fromTimezone: string, toTimezone: str
     const resultDate = new Date(date.getTime() + timeDiff);
     
     return {
-      result: resultDate.toISOString(),
-      originalDate: date.toISOString(),
+      success: true,
+      original: resultDate.toISOString(),
+      converted: resultDate.toISOString(),
       fromTimezone,
       toTimezone
     };
@@ -309,14 +309,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const url = request.url;
+    const pathname = new URL(url).pathname;
     
     // 检测是否为本地开发环境
     const isLocalhost = process.env.NODE_ENV === 'development';
     
-    console.log('API Request:', { url, body, environment: isLocalhost ? 'local' : 'production' });
+    console.log('API Request:', { url, pathname, body, environment: isLocalhost ? 'local' : 'production' });
     
     // 货币转换 - 修复URL匹配逻辑
-    if (url.includes('/api/convert/currency') || body.type === 'currency') {
+    if (pathname.includes('/api/convert/currency') || body.type === 'currency') {
       console.log('处理货币转换请求');
       const { value, fromCurrency, toCurrency, amount, from, to } = body;
       const finalValue = value || amount;
@@ -353,7 +354,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 重量转换 - 本地优先
-    if (url.includes('/api/convert/weight') || body.type === 'weight') {
+    if (pathname.includes('/api/convert/weight') || body.type === 'weight') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -376,7 +377,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 长度转换 - 本地优先
-    if (url.includes('/api/convert/length') || body.type === 'length') {
+    if (pathname.includes('/api/convert/length') || body.type === 'length') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -399,7 +400,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 体积转换 - 本地优先
-    if (url.includes('/api/convert/volume') || body.type === 'volume') {
+    if (pathname.includes('/api/convert/volume') || body.type === 'volume') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -422,7 +423,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 温度转换 - 本地优先
-    if (url.includes('/api/convert/temperature') || body.type === 'temperature') {
+    if (pathname.includes('/api/convert/temperature') || body.type === 'temperature') {
       const { value, fromUnit, toUnit, amount, from, to } = body;
       const finalValue = value || amount;
       const finalFrom = fromUnit || from;
@@ -445,7 +446,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 时区转换
-    if (url.includes('/api/convert/timezone') || body.type === 'timezone') {
+    if (pathname.includes('/api/convert/timezone') || body.type === 'timezone') {
       const { dateTime, fromTimezone, toTimezone } = body;
       const result = convertTimezone(dateTime, fromTimezone, toTimezone);
       return NextResponse.json(result);
