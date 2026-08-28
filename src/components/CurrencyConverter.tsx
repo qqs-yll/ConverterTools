@@ -46,7 +46,7 @@ const CurrencyConverter: React.FC = () => {
       protocol: window.location.protocol
     });
     
-      const apiUrl = `https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`;
+      const apiUrl = `https://api.frankfurter.dev/v2/rate/${fromCurrency}&to=${toCurrency}`;
       console.log('API URL:', apiUrl);
 
       try {
@@ -69,7 +69,7 @@ const CurrencyConverter: React.FC = () => {
           throw new Error('无法获取目标货币汇率');
         }
         
-        const rate = responseData.rates[toCurrency];
+        const rate = responseData.rate;
         const resultNum = parseFloat(amount) * rate;
       
       console.log('响应收到:', {
