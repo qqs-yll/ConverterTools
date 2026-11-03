@@ -68,7 +68,8 @@ const CurrencyConverter: React.FC = () => {
         if (!responseData.rates || !responseData.rates[toCurrency]) {
           throw new Error('无法获取目标货币汇率');
         }
-        
+
+        const rate = responseData.rate;
         const resultNum = parseFloat(amount) * rate;
       
       console.log('响应收到:', {
