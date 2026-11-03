@@ -217,7 +217,7 @@ export const translations = {
         user4: {
           name: 'Crispy Green Pepper Pie',
           role: 'The Solitary Gourmet',
-          text: 'Having multiple format conversions is really convenient. What would I do without you? If it weren't for this software, we wouldn't have even thought about the stress area of a fan switch. Whether it's sunny or rainy, Wolf Gray will always go to Sheep Village to catch sheep. Actually, Tom is always bullied by Jack. SpongeBob also always tells Patrick to go catch jellyfish.'
+          text: 'The convenience of multiple format conversions is significant; what would I do without you? If it were not for this software, we would not have considered the force area of the electric fan switch. Regardless of whether it is sunny or rainy, Grey Wolf will go to Sheep Village to catch sheep. In fact, Tom is always bullied by Jack. SpongeBob also frequently calls Patrick Star to catch jellyfish.'
         }
       }
     },
