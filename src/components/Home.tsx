@@ -142,7 +142,13 @@ const Home: React.FC = () => {
       roleKey: 'testimonials.items.user3.role',
       textKey: 'testimonials.items.user3.text',
       avatar: '/君君.jpg'
-    }
+    },
+    {
+      nameKey: 'testimonials.items.user4.name',
+      roleKey: 'testimonials.items.user4.role',
+      textKey: 'testimonials.items.user4.text',
+      avatar: '/小末.jpg'
+    },
   ];
 
   return (
@@ -680,7 +686,7 @@ const Home: React.FC = () => {
                   <Box
                     key={index}
                     sx={{ 
-                      flex: { xs: '1 1 100%', md: '1 1 calc(33.333% - 32px)' },
+                      flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 32px)', md: '1 1 calc(25% - 32px)' },
                       animationDelay: `${index * 0.1}s`
                     }}
                   >
