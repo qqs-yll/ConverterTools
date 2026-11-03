@@ -217,7 +217,7 @@ export const translations = {
         user4: {
           name: 'Crispy Green Pepper Pie',
           role: 'The Solitary Gourmet',
-          text: 'The ability to convert between multiple formats has made things really convenient. What would I do without you? If it weren’t for this software, we wouldn’t even have thought about the force area of the fan switch. Rain or shine, Grey Wolf always goes to the Sheep Village to catch sheep, and honestly, Tom is always bullied by Jack. SpongeBob also always tells Patrick to catch jellyfish. Only things that are justified and have evidence can be handed over to Sheriff Black Cat as court testimony.'
+          text: 'Having multiple format conversions is really convenient. What would I do without you? If it weren't for this software, we wouldn't have even thought about the stress area of a fan switch. Whether it's sunny or rainy, Wolf Gray will always go to Sheep Village to catch sheep. Actually, Tom is always bullied by Jack. SpongeBob also always tells Patrick to go catch jellyfish.'
         }
       }
     },
@@ -594,7 +594,7 @@ export const translations = {
         user4: {
           name: '青椒脆脆派',
           role: '孤独的美食家',
-          text: '多种格式转换可方便了，离了你我可怎么办啊？要不是有这个软件的话，我们根本没有考虑到电风扇开关的受力面积是多少，不管晴天还是雨天，灰太狼都会去羊村抓羊，其实汤姆总是被杰克欺负。海绵宝宝还总是会叫派大星去抓水母。这些有理由有依据的东西，才能够交给黑猫警长当呈堂供词。'
+          text: '多种格式转换可方便了，离了你我可怎么办啊？要不是有这个软件的话，我们根本没有考虑到电风扇开关的受力面积是多少，不管晴天还是雨天，灰太狼都会去羊村抓羊，其实汤姆总是被杰克欺负。海绵宝宝还总是会叫派大星去抓水母。'
         }
       }
     },
