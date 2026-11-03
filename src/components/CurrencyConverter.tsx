@@ -46,7 +46,7 @@ const CurrencyConverter: React.FC = () => {
       protocol: window.location.protocol
     });
     
-      const apiUrl = `https://api.frankfurter.dev/v2/rate/${fromCurrency}&to=${toCurrency}`;
+      const apiUrl = `https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`;
       console.log('API URL:', apiUrl);
 
       try {
